@@ -1,5 +1,6 @@
 import sys
 import os
+os.environ['QT_QPA_PLATFORM'] = 'xcb'
 import shutil
 import random
 import ctypes
@@ -159,9 +160,10 @@ class MediaUtilityApp(QMainWindow):
         scrub_layout = QHBoxLayout()
         self.time_label = QLabel("00:00")
         self.slider = QSlider(Qt.Orientation.Horizontal)
+        self.slider.mousePressEvent = self.slider_click
         self.slider.setRange(0, 1000)
         self.slider.sliderPressed.connect(lambda: setattr(self, 'is_seeking', True))
-        self.slider.sliderReleased.connect(self.apply_seek)
+        self.slider.sliderReleased.connect(self.apply_seek)    
         self.duration_label = QLabel("00:00")
         scrub_layout.addWidget(self.time_label)
         scrub_layout.addWidget(self.slider)
@@ -512,8 +514,16 @@ class MediaUtilityApp(QMainWindow):
         except Exception as e:
             print(f"Undo Error Encountered: {e}")
 
+    def slider_click(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            value =int((event.position().x() / self.slider.width()) * 1000)
+            self.slider.setValue(value)
+            self.apply_seek()
+        else:
+            super(QSlider, self.slider).mousePressEvent(event)
 if __name__ == "__main__":
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('DannyMediaScrubber')
+    if sys.platform == 'win32':
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('DannyMediaScrubber')
     app = QApplication(sys.argv)
     app.setStyleSheet(MEDIA_PLAYER_STYLE)
     player = MediaUtilityApp()
