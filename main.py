@@ -1,6 +1,5 @@
 import sys
 import os
-os.environ['QT_QPA_PLATFORM'] = 'xcb'
 import shutil
 import random
 import ctypes
@@ -290,8 +289,21 @@ class MediaUtilityApp(QMainWindow):
 
     def init_shortcuts(self):
         QShortcut(QKeySequence(Qt.Key.Key_Space), self, self.toggle_play)
-        QShortcut(QKeySequence(Qt.Key.Key_Left), self, self.prev_file)
-        QShortcut(QKeySequence(Qt.Key.Key_Right), self, self.next_file)
+        # Media navigation shortcuts
+        QShortcut(QKeySequence(Qt.Key.Key_Left), self, lambda: self.seek_by (-60000))
+        QShortcut(QKeySequence(Qt.Key.Key_Right), self, lambda: self.seek_by (60000))
+
+        #playlist navigation shortcuts
+        QShortcut(QKeySequence(Qt.Key.Key_Up), self, self.prev_file)
+        QShortcut(QKeySequence(Qt.Key.Key_Down), self, self.next_file)
+
+    def seek_by(self, milliseconds):
+        if self.media_player.get_media():
+            current_time = self.media_player.get_time()
+            new_time = max(0, current_time + milliseconds)
+            self.media_player.set_time(new_time)
+                 
+
 
     def start_holding(self, seconds):
         self.hold_direction = seconds
